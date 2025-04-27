@@ -53,7 +53,7 @@ text_id = None
 queue = []  # file d'attente
 rose_en_cours = False  # pour savoir si une rose est déjà en train d'être envoyée
 
-def demander_envoi_rose():
+def envoyer_rose():
     """Demander l'envoi d'une rose (ajouter à la file)"""
     queue.append(1)
     traiter_file()
@@ -63,9 +63,9 @@ def traiter_file():
     global rose_en_cours
     if not rose_en_cours and queue:
         queue.pop(0)
-        envoyer_rose()
+        send()
 
-def envoyer_rose():
+def send():
     global rose_en_cours
     rose_en_cours = True
     rose = None
@@ -134,6 +134,6 @@ def fin_envoi():
 
 # Exemple d'utilisation
 for e in range(10):
-	demander_envoi_rose()
+	envoyer_rose()
 
 root.mainloop()
