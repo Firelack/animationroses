@@ -73,7 +73,7 @@ class Rose:
             self.callback_fin()
 
 class Jeu:
-    def __init__(self, root):
+    def __init__(self, root, perso_a, perso_b):
         self.root = root
         self.queue = []
         self.rose_en_cours = False
@@ -92,34 +92,29 @@ class Jeu:
         self.canvas = tk.Canvas(root, width=self.width, height=self.height, bg="lightgray")
         self.canvas.pack()
 
-        # Chargement images
-        self.perso_a_img_pil = Image.open("perso_a.png")
-        self.perso_b_img_pil = Image.open("perso_b.png")
-        self.rose_img_pil = Image.open("rose.png")
+        # Utilisation des personnages passés en argument
+        self.a = perso_a
+        self.b = perso_b
 
-        # Création personnages
-        self.a = Personnage("A", self.perso_a_img_pil, (0, self.height // 2), "w")
-        self.b = Personnage("B", self.perso_b_img_pil, (self.width, self.height // 2), "e")
-
-        # Placement personnages
+        # Placement des personnages sur le canvas
         self.canvas.create_image(*self.a.position, image=self.a.image, anchor=self.a.anchor)
         self.canvas.create_image(*self.b.position, image=self.b.image, anchor=self.b.anchor)
 
-    def envoyer_rose(self, envoyeur, receveur):
-        self.queue.append((envoyeur, receveur))
+    def envoyer_rose(self, envoyeur, receveur, rose_img_pil):
+        self.queue.append((envoyeur, receveur, rose_img_pil))
         self.traiter_file()
 
     def traiter_file(self):
         if not self.rose_en_cours and self.queue:
-            envoyeur, receveur = self.queue.pop(0)
-            self.send(envoyeur, receveur)
+            envoyeur, receveur, rose_img_pil = self.queue.pop(0)
+            self.send(envoyeur, receveur, rose_img_pil)
 
-    def send(self, envoyeur, receveur):
+    def send(self, envoyeur, receveur, rose_img_pil):
         self.rose_en_cours = True
         depart = envoyeur.get_centre()
         arrivee = receveur.get_centre()
 
-        rose = Rose(self.canvas, self.rose_img_pil, depart, arrivee)
+        rose = Rose(self.canvas, rose_img_pil, depart, arrivee)
         rose.start(lambda: self.fin_envoi(envoyeur, receveur))
 
     def fin_envoi(self, envoyeur, receveur):
@@ -151,11 +146,26 @@ class Jeu:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    jeu = Jeu(root)
 
-    # Exemples d'envoi
-    for _ in range(5):
-        jeu.envoyer_rose(jeu.a, jeu.b)
-        jeu.envoyer_rose(jeu.b, jeu.a)
+    # Chargement des images des personnages
+    perso_a_img_pil = Image.open("perso_a.png")
+    perso_b_img_pil = Image.open("perso_b.png")
+    rose1 = Image.open("rose1.png")
+    rose2 = Image.open("rose2.png")
+    rose3 = Image.open("rose3.png")
+    rose4 = Image.open("rose4.png").convert("RGBA")
+
+    # Création des personnages en dehors de Jeu
+    perso_a = Personnage("A", perso_a_img_pil, (0, int(root.winfo_screenheight() * 0.8) // 2), "w")
+    perso_b = Personnage("B", perso_b_img_pil, (int(root.winfo_screenwidth() * 0.8), int(root.winfo_screenheight() * 0.8) // 2), "e")
+
+    # Création du jeu avec les personnages déjà créés
+    jeu = Jeu(root, perso_a, perso_b)
+
+    # Exemples d'envoi avec des roses différentes
+    for e in range(5):
+        jeu.envoyer_rose(jeu.a, jeu.b, rose2)
+        jeu.envoyer_rose(jeu.b, jeu.a, rose1)
+        jeu.envoyer_rose(jeu.a, jeu.b, rose4)
 
     root.mainloop()

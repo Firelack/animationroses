@@ -30,7 +30,10 @@ perso_b_img_pil = Image.open("perso_b.png")
 
 perso_a_img = ImageTk.PhotoImage(perso_a_img_pil)
 perso_b_img = ImageTk.PhotoImage(perso_b_img_pil)
-rose_img_original = Image.open("rose.png")  # chargé en PIL pour rotation
+rose1 = Image.open("rose1.png")  # chargé en PIL pour rotation
+rose2 = Image.open("rose2.png")  # une deuxième rose
+rose3 = Image.open("rose3.png")  # une troisième rose
+rose4 = Image.open("rose4.png").convert("RGBA")  # une quatrième rose
 
 # Placement initial des personnages
 pos_a = (0, fenetre_height // 2)  # bord gauche
@@ -68,6 +71,7 @@ rose_en_cours = False  # pour savoir si une rose est déjà en train d'être env
 
 # ----------- Fonctions -----------
 
+
 def get_centre(perso, anchor):
     x, y = perso["position"]
     largeur = perso["largeur"]
@@ -80,19 +84,22 @@ def get_centre(perso, anchor):
         centre_x = x
     return (centre_x, y)
 
-def envoyer_rose(envoyeur=a, receveur=b):
+
+def envoyer_rose(envoyeur=a, receveur=b, rose_img=rose1):
     """Demander l'envoi d'une rose (ajouter à la file)"""
-    queue.append((envoyeur, receveur))
+    queue.append((envoyeur, receveur, rose_img))
     traiter_file()
+
 
 def traiter_file():
     """Envoyer une rose si aucune n'est en cours"""
     global rose_en_cours
     if not rose_en_cours and queue:
-        envoyeur, receveur = queue.pop(0)
-        send(envoyeur, receveur)
+        envoyeur, receveur, rose_img = queue.pop(0)
+        send(envoyeur, receveur, rose_img)
 
-def send(envoyeur, receveur):
+
+def send(envoyeur, receveur, rose_img):
     """Envoyer une rose de envoyeur à receveur"""
     global rose_en_cours
     rose_en_cours = True
@@ -109,19 +116,19 @@ def send(envoyeur, receveur):
         nonlocal rose, rose_step
 
         if rose_step == 0:
-            rotated = rose_img_original.rotate(0)
-            rose_img = ImageTk.PhotoImage(rotated)
-            rose = canvas.create_image(depart_x, depart_y, image=rose_img)
-            images_refs.append(rose_img)
+            rotated = rose_img.rotate(0)
+            rose_img_obj = ImageTk.PhotoImage(rotated)
+            rose = canvas.create_image(depart_x, depart_y, image=rose_img_obj)
+            images_refs.append(rose_img_obj)
 
         angle = 360 * rose_step / nombre_etapes
         x = depart_x + (arrivee_x - depart_x) * rose_step / nombre_etapes
         y = depart_y + (arrivee_y - depart_y) * rose_step / nombre_etapes
 
-        rotated = rose_img_original.rotate(angle, expand=True)
-        rose_img = ImageTk.PhotoImage(rotated)
-        canvas.itemconfig(rose, image=rose_img)
-        images_refs.append(rose_img)
+        rotated = rose_img.rotate(angle, expand=True)
+        rose_img_obj = ImageTk.PhotoImage(rotated)
+        canvas.itemconfig(rose, image=rose_img_obj)
+        images_refs.append(rose_img_obj)
         canvas.coords(rose, x, y)
 
         rose_step += 1
@@ -134,6 +141,7 @@ def send(envoyeur, receveur):
             fin_envoi()
 
     animate()
+
 
 def ajouter_texte(envoyeur, receveur):
     global text_id
@@ -158,16 +166,17 @@ def ajouter_texte(envoyeur, receveur):
     else:
         canvas.itemconfig(text_id, text=texte)
 
+
 def fin_envoi():
     """Fin de l'envoi d'une rose"""
     global rose_en_cours
     rose_en_cours = False
     traiter_file()
 
-# ----------- Exemple d'utilisation -----------
-
+# Exemple d'envoi avec des roses différentes
 for e in range(5):
-    envoyer_rose(a, b)  # Envoi de A à B
-    envoyer_rose(b, a)  # Envoi de B à A
+    envoyer_rose(a, b, rose4)  # Envoi de A à B avec une autre rose
+    envoyer_rose(b, a, rose1)  # Envoi de B à A avec la rose originale
+    envoyer_rose(a, b, rose2)  # Envoi de A à B avec une troisième rose
 
 root.mainloop()
